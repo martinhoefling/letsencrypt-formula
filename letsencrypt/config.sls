@@ -5,6 +5,6 @@
 
 letsencrypt-config:
   file.managed:
-    - name: {{ letsencrypt.cli_install_dir }}/cli.ini
+    - name: /etc/letsencrypt/cli.ini
     - makedirs: true
     - contents_pillar: letsencrypt:config
