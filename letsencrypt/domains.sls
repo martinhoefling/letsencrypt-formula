@@ -9,11 +9,12 @@ create-initial-cert-{{ setname }}-{{ domainlist[0] }}:
     - unless: ls /etc/letsencrypt/live/{{ domainlist[0] }}
     - name: cd {{ letsencrypt.cli_install_dir }}; ./letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
 
-letsencrypt-crontab--{{ setname }}-{{ domainlist[0] }}:
+letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
     - name: cd {{ letsencrypt.cli_install_dir }}; ./letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
     - month: '*/2'
     - minute: random
     - hour: random
     - daymonth: random
+    - identifier: letsencrypt-{{ setname }}-{{ domainlist[0] }}
 {% endfor %}
