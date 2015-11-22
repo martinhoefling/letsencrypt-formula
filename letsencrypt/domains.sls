@@ -17,4 +17,6 @@ letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
     - hour: random
     - daymonth: random
     - identifier: letsencrypt-{{ setname }}-{{ domainlist[0] }}
+    - require:
+      - cmd: create-initial-cert-{{ setname }}-{{ domainlist[0] }}
 {% endfor %}
