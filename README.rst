@@ -26,6 +26,7 @@ This is a shortcut for letsencrypt.install letsencrypt.config and letsencrypt.do
 
 Only installs the letsencrypt client. Currently the letsencrypt-auto method is used. This will create a virtualenv in the /root/.config/ directory.
 The installation method will be replaced by using packages, as default as soon as they ara stable and available for all major platforms.
+
 ``config``
 ----------
 
