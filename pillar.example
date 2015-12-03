@@ -4,7 +4,6 @@ letsencrypt:
     email = webmaster@example.com
     authenticator = webroot
     webroot-path = /var/lib/www
-    agree-dev-preview = True
     agree-tos = True
     renew-by-default = True
   domainsets:
