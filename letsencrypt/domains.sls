@@ -7,7 +7,7 @@
 create-initial-cert-{{ setname }}-{{ domainlist[0] }}:
   cmd.run:
     - unless: ls /etc/letsencrypt/live/{{ domainlist[0] }}
-    - name: letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
+    - name: {{ letsencrypt.cli_install_dir }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
     - cwd: {{ letsencrypt.cli_install_dir }}
     - require:
       - file: letsencrypt-config
