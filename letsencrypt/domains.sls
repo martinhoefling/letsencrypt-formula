@@ -6,7 +6,7 @@
 {% for setname, domainlist in salt['pillar.get']('letsencrypt:domainsets').iteritems() %}
 create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
   cmd.run:
-    - unless: ls /etc/letsencrypt/{{ domainlist | join('.check /etc/letsencrypt/') }}.check
+    - unless: test -f /etc/letsencrypt/{{ domainlist | join('.check && test -f /etc/letsencrypt/') }}.check
     - name: {{ letsencrypt.cli_install_dir }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
     - cwd: {{ letsencrypt.cli_install_dir }}
     - require:
