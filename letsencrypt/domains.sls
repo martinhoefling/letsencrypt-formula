@@ -3,11 +3,20 @@
 
 {% from "letsencrypt/map.jinja" import letsencrypt with context %}
 
-{% for setname, domainlist in salt['pillar.get']('letsencrypt:domainsets').iteritems() %}
+{%
+  for setname, domainlist in salt['pillar.get'](
+    'letsencrypt:domainsets'
+  ).iteritems()
+%}
 create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
   cmd.run:
-    - unless: test -f /etc/letsencrypt/{{ domainlist | join('.check && test -f /etc/letsencrypt/') }}.check
-    - name: {{ letsencrypt.cli_install_dir }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
+    - unless: >
+        test -f /etc/letsencrypt/{{
+          domainlist | join('.check && test -f /etc/letsencrypt/')
+        }}.check
+    - name: {{
+          letsencrypt.cli_install_dir
+        }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
     - cwd: {{ letsencrypt.cli_install_dir }}
     - require:
       - file: letsencrypt-config
@@ -23,7 +32,9 @@ touch /etc/letsencrypt/{{ domain }}.check:
 
 letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
-    - name: {{ letsencrypt.cli_install_dir }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
+    - name: {{
+          letsencrypt.cli_install_dir
+        }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
     - month: '*/2'
     - minute: random
     - hour: random
