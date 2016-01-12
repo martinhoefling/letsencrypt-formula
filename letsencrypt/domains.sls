@@ -3,7 +3,7 @@
 
 {% from "letsencrypt/map.jinja" import letsencrypt with context %}
 
-{% for setname, domainlist in pillar['letsencrypt']['domainsets'].iteritems() %}
+{% for setname, domainlist in salt['pillar.get']('letsencrypt:domainsets').iteritems() %}
 create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
   cmd.run:
     - unless: ls /etc/letsencrypt/{{ domainlist | join('.check /etc/letsencrypt/') }}.check
@@ -12,11 +12,14 @@ create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
     - require:
       - file: letsencrypt-config
 
-touch /etc/letsencrypt/{{ domainlist | join('.check /etc/letsencrypt/') }}.check:
-  cmd.run:
-    - unless: test -f /etc/letsencrypt/{{ domainlist | join('.check && test -f /etc/letsencrypt/') }}.check
+{% for domain in domainlist %}
+touch /etc/letsencrypt/{{ domain }}.check:
+  file.touch:
+    - name: /etc/letsencrypt/{{ domain }}.check
+    - unless: test -f /etc/letsencrypt/{{ domain }}.check
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
+{% endfor %}
 
 letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
