@@ -14,6 +14,7 @@ create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
 
 touch /etc/letsencrypt/{{ domainlist | join('.check /etc/letsencrypt/') }}.check:
   cmd.run:
+    - unless: test -f /etc/letsencrypt/{{ domainlist | join('.check && test -f /etc/letsencrypt/') }}.check
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
 
