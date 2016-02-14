@@ -16,6 +16,11 @@
         do
             openssl x509 -in /etc/letsencrypt/live/$1/cert.pem -noout -text | grep DNS:${DOMAIN} > /dev/null || exit 1
         done
+        CERT=$(date -d "$(openssl x509 -in /etc/letsencrypt/live/$1/cert.pem -enddate -noout | cut -d'=' -f2)" "+%s")
+        CURRENT=$(date "+%s")
+        REMAINING=$((($CERT - $CURRENT) / 60 / 60 / 24))
+        [ "$REMAINING" -gt "30" ] || exit 1
+        echo Domains $@ are in cert and cert is valid for $REMAINING days
 
 {%
   for setname, domainlist in salt['pillar.get'](
@@ -36,13 +41,13 @@ create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
 
 letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
-    - name: {{
+    - name: /usr/local/bin/check_letsencrypt_cert.sh {{ domainlist|join(' ') }} > /dev/null ||{{
           letsencrypt.cli_install_dir
         }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
-    - month: '*/2'
+    - month: '*'
     - minute: random
     - hour: random
-    - daymonth: random
+    - dayweek: '*'
     - identifier: letsencrypt-{{ setname }}-{{ domainlist[0] }}
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
