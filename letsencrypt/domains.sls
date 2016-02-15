@@ -3,42 +3,51 @@
 
 {% from "letsencrypt/map.jinja" import letsencrypt with context %}
 
+
+/usr/local/bin/check_letsencrypt_cert.sh:
+  file.managed:
+    - mode: 755
+    - contents: |
+        #!/bin/bash
+
+        FIRST_CERT=$1
+
+        for DOMAIN in "$@"
+        do
+            openssl x509 -in /etc/letsencrypt/live/$1/cert.pem -noout -text | grep DNS:${DOMAIN} > /dev/null || exit 1
+        done
+        CERT=$(date -d "$(openssl x509 -in /etc/letsencrypt/live/$1/cert.pem -enddate -noout | cut -d'=' -f2)" "+%s")
+        CURRENT=$(date "+%s")
+        REMAINING=$((($CERT - $CURRENT) / 60 / 60 / 24))
+        [ "$REMAINING" -gt "30" ] || exit 1
+        echo Domains $@ are in cert and cert is valid for $REMAINING days
+
 {%
   for setname, domainlist in salt['pillar.get'](
     'letsencrypt:domainsets'
   ).iteritems()
 %}
+
 create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
   cmd.run:
-    - unless: >
-        test -f /etc/letsencrypt/{{
-          domainlist | join('.check && test -f /etc/letsencrypt/')
-        }}.check
+    - unless: /usr/local/bin/check_letsencrypt_cert.sh {{ domainlist|join(' ') }}
     - name: {{
           letsencrypt.cli_install_dir
         }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
     - cwd: {{ letsencrypt.cli_install_dir }}
     - require:
       - file: letsencrypt-config
-
-{% for domain in domainlist %}
-touch /etc/letsencrypt/{{ domain }}.check:
-  file.touch:
-    - name: /etc/letsencrypt/{{ domain }}.check
-    - unless: test -f /etc/letsencrypt/{{ domain }}.check
-    - require:
-      - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
-{% endfor %}
+      - file: /usr/local/bin/check_letsencrypt_cert.sh
 
 letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
-    - name: {{
+    - name: /usr/local/bin/check_letsencrypt_cert.sh {{ domainlist|join(' ') }} > /dev/null ||{{
           letsencrypt.cli_install_dir
         }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
-    - month: '*/2'
+    - month: '*'
     - minute: random
     - hour: random
-    - daymonth: random
+    - dayweek: '*'
     - identifier: letsencrypt-{{ setname }}-{{ domainlist[0] }}
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
