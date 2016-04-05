@@ -24,20 +24,9 @@
 
 /usr/local/bin/renew_letsencrypt_cert.sh:
   file.managed:
+    - template: jinja
+    - source: salt://letsencrypt/files/renew_letsencrypt_cert.sh.jinja
     - mode: 755
-    - contents: |
-        #!/bin/bash
-        for DOMAIN in "$@"
-        do
-            if ! /usr/local/bin/check_letsencrypt_cert.sh "$DOMAIN" > /dev/null
-            then
-                {{ letsencrypt.cli_install_dir }}/letsencrypt-auto -d "$DOMAIN" certonly || exit 1
-                cat /etc/letsencrypt/live/${DOMAIN}/fullchain.pem \
-                    /etc/letsencrypt/live/${DOMAIN}/privkey.pem \
-                    > /etc/letsencrypt/live/${DOMAIN}/fullchain-privkey.pem || exit 1
-                chmod 600 /etc/letsencrypt/live/${DOMAIN}/fullchain-privkey.pem || exit 1
-            fi
-        done
     - require:
       - file: /usr/local/bin/check_letsencrypt_cert.sh
 
