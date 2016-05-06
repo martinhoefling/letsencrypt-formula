@@ -47,6 +47,8 @@ create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
       - file: letsencrypt-config
       - file: /usr/local/bin/check_letsencrypt_cert.sh
 
+# domainlist[0] represents the "CommonName", and the rest
+# represent SubjectAlternativeNames
 letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
     - name: /usr/local/bin/renew_letsencrypt_cert.sh {{ domainlist|join(' ') }}
@@ -59,19 +61,15 @@ letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
       - file: /usr/local/bin/renew_letsencrypt_cert.sh
 
-{% for domain in domainlist %}
-
-create-fullchain-privkey-pem-for-{{ domain }}:
+create-fullchain-privkey-pem-for-{{ domainlist[0] }}:
   cmd.run:
     - name: |
-        cat /etc/letsencrypt/live/{{ domain }}/fullchain.pem \
-            /etc/letsencrypt/live/{{ domain }}/privkey.pem \
-            > /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem && \
-        chmod 600 /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem
-    - creates: /etc/letsencrypt/live/{{ domain }}/fullchain-privkey.pem
+        cat /etc/letsencrypt/live/{{ domainlist[0] }}/fullchain.pem \
+            /etc/letsencrypt/live/{{ domainlist[0] }}/privkey.pem \
+            > /etc/letsencrypt/live/{{ domainlist[0] }}/fullchain-privkey.pem && \
+        chmod 600 /etc/letsencrypt/live/{{ domainlist[0] }}/fullchain-privkey.pem
+    - creates: /etc/letsencrypt/live/{{ domainlist[0] }}/fullchain-privkey.pem
     - require:
       - cmd: create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}
-
-{% endfor %}
 
 {% endfor %}
