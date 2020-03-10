@@ -31,19 +31,14 @@
 create-initial-cert-{{ setname }}-{{ domainlist | join('+') }}:
   cmd.run:
     - unless: /usr/local/bin/check_letsencrypt_cert.sh {{ domainlist|join(' ') }}
-    - name: {{
-          letsencrypt.cli_install_dir
-        }}/letsencrypt-auto -d {{ domainlist|join(' -d ') }} certonly
-    - cwd: {{ letsencrypt.cli_install_dir }}
+    - name: /usr/bin/certbot -d {{ domainlist|join(' -d ') }} certonly
     - require:
       - file: letsencrypt-config
       - file: /usr/local/bin/check_letsencrypt_cert.sh
 
 letsencrypt-crontab-{{ setname }}-{{ domainlist[0] }}:
   cron.present:
-    - name: /usr/local/bin/check_letsencrypt_cert.sh {{ domainlist|join(' ') }} > /dev/null ||{{
-          letsencrypt.cli_install_dir
-        }}/letsencrypt-auto --non-interactive --agree-tos --quiet -d {{ domainlist|join(' -d ') }} certonly
+    - name: /usr/local/bin/check_letsencrypt_cert.sh {{ domainlist|join(' ') }} > /dev/null || /usr/bin/certbot --non-interactive --agree-tos --quiet -d {{ domainlist|join(' -d ') }} certonly
     - month: '*'
     - minute: random
     - hour: random

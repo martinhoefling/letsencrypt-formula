@@ -3,8 +3,6 @@
 
 {% from "letsencrypt/map.jinja" import letsencrypt with context %}
 
-letsencrypt-client-git:
-  git.latest:
-    - name: https://github.com/letsencrypt/letsencrypt
-    - target: {{ letsencrypt.cli_install_dir }}
-    - force_reset: true
+letsencrypt-certbot-pkg:
+  pkg.installed:
+    - name: certbot
